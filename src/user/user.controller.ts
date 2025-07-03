@@ -1,7 +1,7 @@
 import { Body, Controller, Post } from "@nestjs/common";
 import { UserService } from "./user.service";
 import { WebResponse } from "src/model/web.model";
-import { RegisterUserRequest, RegisterUserResponse } from "src/model/user.model";
+import { LoginUserRequest, LoginUserResponse, RegisterUserRequest, RegisterUserResponse } from "src/model/user.model";
 
 @Controller('api/users')
 export class UserController {
@@ -17,6 +17,17 @@ export class UserController {
         return {
             data: result,
             message: 'User registered successfully',
+        }
+    }
+
+    @Post('login')
+    async login(
+        @Body() request: LoginUserRequest
+    ): Promise<WebResponse<LoginUserResponse>> {
+        const result = await this.userService.LoginUser(request);
+        return {
+            data: result,
+            message: 'User logged in successfully',
         }
     }
 }

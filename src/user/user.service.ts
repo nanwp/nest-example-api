@@ -2,10 +2,11 @@ import { HttpException, Inject, Injectable } from "@nestjs/common";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { PrismaService } from "src/cummon/prisma.service";
 import { ValidationService } from "src/cummon/validation.service";
-import { RegisterUserRequest, RegisterUserResponse } from "src/model/user.model";
+import { LoginUserRequest, LoginUserResponse, RegisterUserRequest, RegisterUserResponse } from "src/model/user.model";
 import { Logger } from "winston";
 import { UserValidation } from "./user.validation";
 import * as bcrypt from 'bcrypt';
+import { JwtService } from "@nestjs/jwt";
 
 @Injectable()
 export class UserService {
@@ -13,6 +14,7 @@ export class UserService {
         private validationService: ValidationService,
         @Inject(WINSTON_MODULE_PROVIDER)private logger: Logger,
         private prismaService: PrismaService,
+        private jwtService: JwtService, 
     ) {}
     async registerUser(request: RegisterUserRequest): Promise<RegisterUserResponse> {
         this.logger.info('Registering user', { request });
@@ -49,5 +51,45 @@ export class UserService {
             createdAt: user.createdAt,
             updatedAt: user.updatedAt,
         }
+    }
+
+    async LoginUser(request: LoginUserRequest): Promise<LoginUserResponse> {
+        this.logger.info('Logging in user', { request });
+
+        const loginRequest: LoginUserRequest = this.validationService.validate(UserValidation.LOGIN, request);
+
+        const user = await this.prismaService.user.findUnique({
+            where: {
+                username: loginRequest.username,
+            }
+        });
+
+        if (!user) {
+            this.logger.warn('User not found', { username: loginRequest.username });
+            throw new HttpException('User not found', 404);
+        }
+
+        const isPasswordValid = await bcrypt.compare(loginRequest.password, user.password);
+        if (!isPasswordValid) {
+            this.logger.warn('Invalid password', { username: loginRequest.username });
+            throw new HttpException('Invalid password', 401);
+        }
+
+        // Here you would typically generate a JWT token and return it
+        const accessToken = await this.jwtService.signAsync({ userId: user.id, username: user.username });
+
+        const response: LoginUserResponse = {
+            User: {
+                id: user.id,
+                username: user.username,
+                email: user.email,
+                name: user.name,
+                createdAt: user.createdAt,
+                updatedAt: user.updatedAt,
+            },
+            accessToken: accessToken,
+        };
+        
+        return response;
     }
 }
