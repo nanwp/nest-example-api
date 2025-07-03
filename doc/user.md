@@ -20,7 +20,8 @@ Response Body (success):
     "data" {
         "username": "nanda",
         "name" : "nanda"
-    }
+    },
+    "message": "registered success"
 }
 ```
 
@@ -32,9 +33,22 @@ Response Body (error):
 }
 ```
 
+**Example Request:**
+
+```bash
+curl -X POST http://localhost:3000/api/users \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "nanda",
+    "email": "nanda@gmail.com",
+    "username": "nanda",
+    "password": "password"
+  }'
+```
+
 ## Login User
 
-Endpoint : POST  /api/login
+Endpoint : POST  /api/users/login
 
 Request Body :
 
@@ -50,10 +64,14 @@ Response Body (success):
 ```json
 {
     "data" {
-        "username": "nanda",
-        "name" : "nanda",
-        "token" : "abcd"
-    }
+        "user" : {
+            "id": "abcd",
+            "name": "nanda",
+            "email": "nanwp.dev@gmail.com"
+        },
+        "accessToken": "abcd"
+    }, 
+    "message": "User Logedin success"
 }
 ```
 
@@ -63,6 +81,17 @@ Response Body (error):
 {
     "errors": "password is worng"
 }
+```
+
+**Example Request:**
+
+```bash
+curl -X POST http://localhost:3000/api/users/login \
+  -H "Content-Type: application/json" \
+  -d '{
+    "username": "nanda",
+    "password": "password"
+  }'
 ```
 
 ## Get User

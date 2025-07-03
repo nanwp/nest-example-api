@@ -2,7 +2,7 @@ import { HttpException, Inject, Injectable } from "@nestjs/common";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { PrismaService } from "src/cummon/prisma.service";
 import { ValidationService } from "src/cummon/validation.service";
-import { LoginUserRequest, LoginUserResponse, RegisterUserRequest, RegisterUserResponse } from "src/model/user.model";
+import { LoginUserRequest, LoginUserResponse, RegisterUserRequest, RegisterUserResponse, User } from "src/model/user.model";
 import { Logger } from "winston";
 import { UserValidation } from "./user.validation";
 import * as bcrypt from 'bcrypt';
@@ -75,7 +75,6 @@ export class UserService {
             throw new HttpException('Invalid password', 401);
         }
 
-        // Here you would typically generate a JWT token and return it
         const accessToken = await this.jwtService.signAsync({ userId: user.id, username: user.username });
 
         const response: LoginUserResponse = {
@@ -91,5 +90,29 @@ export class UserService {
         };
         
         return response;
+    }
+
+    async getUserProfile(userId: string): Promise<User> {
+        this.logger.info('Retrieving user profile', { userId });
+
+        const user = await this.prismaService.user.findUnique({
+            where: {
+                id: userId,
+            }
+        });
+
+        if (!user) {
+            this.logger.warn('User not found', { userId });
+            throw new HttpException('User not found', 404);
+        }
+
+        return {
+            id: user.id,
+            username: user.username,
+            email: user.email,
+            name: user.name,
+            createdAt: user.createdAt,
+            updatedAt: user.updatedAt,
+        };
     }
 }

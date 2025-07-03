@@ -1,7 +1,8 @@
-import { Body, Controller, Post } from "@nestjs/common";
+import { Body, Controller, Get, Logger, Post, Request, UseGuards } from "@nestjs/common";
 import { UserService } from "./user.service";
 import { WebResponse } from "src/model/web.model";
-import { LoginUserRequest, LoginUserResponse, RegisterUserRequest, RegisterUserResponse } from "src/model/user.model";
+import { LoginUserRequest, LoginUserResponse, RegisterUserRequest, RegisterUserResponse, User } from "src/model/user.model";
+import { UserGuard } from "./user.guard";
 
 @Controller('api/users')
 export class UserController {
@@ -28,6 +29,18 @@ export class UserController {
         return {
             data: result,
             message: 'User logged in successfully',
+        }
+    }
+
+    @UseGuards(UserGuard)
+    @Get('profile')
+    async getProfile(@Request() req) : Promise<WebResponse<User>> {
+        const user = req.user;
+        console.log('User profile request:', user);
+        const result = await this.userService.getUserProfile(user.userId);
+        return {
+            data: result,
+            message: 'User profile retrieved successfully',
         }
     }
 }
