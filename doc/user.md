@@ -17,7 +17,7 @@ Response Body (success):
 
 ```json
 {
-    "data" {
+    "data" : {
         "username": "nanda",
         "name" : "nanda"
     },
@@ -63,7 +63,7 @@ Response Body (success):
 
 ```json
 {
-    "data" {
+    "data": {
         "user" : {
             "id": "abcd",
             "name": "nanda",
