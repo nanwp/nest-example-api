@@ -3,9 +3,10 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { CummonModule } from './cummon/cummon.module';
 import { UserModule } from './user/user.module';
+import { CutiModule } from './cuti/cuti.module';
 
 @Module({
-  imports: [CummonModule, UserModule],
+  imports: [CummonModule, UserModule, CutiModule],
   controllers: [AppController],
   providers: [AppService],
 })
