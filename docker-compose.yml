@@ -1,0 +1,36 @@
+version: '1.0'
+
+services:
+  nest-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    depends_on:
+      - db
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      DATABASE_URL: postgresql://cuti_user:cuti_password@db:5432/cuti_db
+    networks:
+      - nest-network
+    restart: unless-stopped
+
+  db:
+    image: postgres:13
+    container_name: postgres-nest
+    environment:
+      POSTGRES_USER: cuti_user
+      POSTGRES_PASSWORD: cuti_password
+      POSTGRES_DB: cuti_db
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - nest-network
+
+volumes:
+  postgres-data:
+
+networks:
+  nest-network:
