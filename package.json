@@ -79,9 +79,6 @@
       "**/*.(t|j)s"
     ],
     "coverageDirectory": "../coverage",
-    "testEnvironment": "node",
-    "generated/prisma": [
-      "./generated/prisma"
-    ]
+    "testEnvironment": "node"
   }
 }
