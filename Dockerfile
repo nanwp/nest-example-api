@@ -22,6 +22,9 @@ COPY --from=build /app/dist ./dist
 COPY --from=build /app/package*.json ./
 COPY --from=build /app/node_modules ./node_modules
 
+# Copy prisma schema
+COPY --from=build /app/prisma ./prisma
+
 ENV NODE_ENV=production
 
 CMD ["node", "dist/main"]
