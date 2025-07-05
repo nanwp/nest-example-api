@@ -1,4 +1,4 @@
-version: '1.0'
+version: '3.8'
 
 services:
   nest-app:
@@ -28,6 +28,11 @@ services:
       - postgres-data:/var/lib/postgresql/data
     networks:
       - nest-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U cuti_user"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
 volumes:
   postgres-data:
