@@ -2,7 +2,7 @@ import { Inject, Injectable } from "@nestjs/common";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { PrismaService } from "src/cummon/prisma.service";
 import { ValidationService } from "src/cummon/validation.service";
-import { JenisCuti } from "src/model/user.model";
+import { JenisCuti, Supervisor } from "src/model/cuti.model";
 import { Logger } from "winston";
 
 @Injectable()
@@ -50,7 +50,66 @@ export class CutiService {
         }));
     }
 
+    async getSupervisors(): Promise<Supervisor[]> {
+        this.logger.info('Fetching supervisors');
+
+        const supervisors = await this.prismaService.supervisor.findMany({
+            orderBy: {
+                createdAt: 'desc',
+            },
+        });
+
+        if (!supervisors || supervisors.length === 0) {
+            this.logger.warn('No supervisors found');
+            return [];
+        }
+
+        return supervisors.map(supervisor => ({
+            id: supervisor.id,
+            name: supervisor.name,
+            email: supervisor.email,
+            position: supervisor.position,
+            createdAt: supervisor.createdAt,
+            updatedAt: supervisor.updatedAt,
+        }));
+    }
+
+    async createDefaultSupervisors() {
+        // Check if supervisors already exist
+        const existingSupervisors = await this.prismaService.supervisor.findMany();
+        if (existingSupervisors.length > 0) {
+            this.logger.warn('Supervisors data already exists, skipping creation');
+            return {
+                message: 'Supervisors data already exists, skipping creation',
+            };
+        }
+
+        // create default supervisors
+        this.logger.info('Creating default supervisors data');
+        await this.prismaService.supervisor.createMany({
+            data: [
+                { name: 'Supervisor A', email: 'supervisorA@example.com', position: 'Manager' },
+                { name: 'Supervisor B', email: 'supervisorB@example.com', position: 'Team Lead' },
+                { name: 'Supervisor C', email: 'supervisorC@example.com', position: 'Senior Developer' },
+            ],
+        });
+
+        this.logger.info('Default supervisors data created successfully');
+        return {
+            message: 'Default supervisors data created successfully',
+        };
+    }
+
     async createDefaultDataJenisCuti() {
+        // Check if jenis cuti already exists
+        const existingJenisCuti = await this.prismaService.jenisCuti.findMany();
+        if (existingJenisCuti.length > 0) {
+            this.logger.warn('Jenis cuti data already exists, skipping creation');
+            return {
+                message: 'Jenis cuti data already exists, skipping creation',
+            };
+        }
+
         // create default jenis cuti
         this.logger.info('Creating default jenis cuti data');
         await this.prismaService.jenisCuti.createMany({

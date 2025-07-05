@@ -33,4 +33,22 @@ export class CutiController {
             message: 'Jenis cuti deleted successfully',
         };
     }
+
+    @UseGuards(UserGuard)
+    @Get('supervisors')
+    async getSupervisors() {
+        const supervisors = await this.cutiService.getSupervisors();
+        return {
+            data: supervisors,
+            message: 'Supervisors retrieved successfully',
+        };
+    }
+
+    @Post('supervisors/seed')
+    async seedSupervisors() {
+        await this.cutiService.createDefaultSupervisors();
+        return {
+            message: 'Supervisors seeded successfully',
+        };
+    }
 }
