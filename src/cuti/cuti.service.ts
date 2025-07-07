@@ -229,25 +229,25 @@ export class CutiService {
         await this.prismaService.user.createMany({
             data: [
                 {
-                    name: 'Supervisor 1',
-                    username: 'supervisor1',
-                    email: 'supervisor1@example.com',
+                    name: 'Udin Kusnadi',
+                    username: 'udin.kusnadi',
+                    email: 'udin.kusnadi@example.com',
                     position: 'Manager',
                     role: 'supervisor',
                     password: 'supervisor1password', // Use a secure password in production
                 },
                 {
-                    name: 'Supervisor 2',
-                    username: 'supervisor2',
-                    email: 'supervisor2@example.com',
+                    name: 'Bambang Setiawan',
+                    username: 'bambang.setiawan',
+                    email: 'bambang.setiawan@example.com',
                     position: 'Team Lead',
                     role: 'supervisor',
                     password: 'supervisor2password', // Use a secure password in production
                 },
                 {
-                    name: 'Supervisor 3',
-                    username: 'supervisor3',
-                    email: 'supervisor3@example.com',
+                    name: 'Ayu Pratiwi',
+                    username: 'ayu.pratiwi',
+                    email: 'ayu.pratiwi@example.com',
                     position: 'Senior Developer',
                     role: 'supervisor',
                     password: 'supervisor3password', // Use a secure password in production
@@ -258,6 +258,17 @@ export class CutiService {
         this.logger.info('Default supervisors data created successfully');
         return {
             message: 'Default supervisors data created successfully',
+        };
+    }
+
+    async deleteAllSupervisors() {
+        await this.prismaService.user.deleteMany({
+            where: {
+                role: 'supervisor',
+            },
+        });
+        return {
+            message: 'All supervisors deleted successfully',
         };
     }
 

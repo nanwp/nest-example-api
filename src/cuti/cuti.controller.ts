@@ -52,6 +52,13 @@ export class CutiController {
             message: 'Supervisors seeded successfully',
         };
     }
+    @Delete('supervisors/seed')
+    async deleteSupervisors() {
+        await this.cutiService.deleteAllSupervisors();
+        return {
+            message: 'Supervisors deleted successfully',
+        };
+    }
 
     @UseGuards(UserGuard)
     @Post('create')
