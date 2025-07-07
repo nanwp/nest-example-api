@@ -1,6 +1,7 @@
-import { Controller, Delete, Get, Post, UseGuards } from "@nestjs/common";
+import { Body, Controller, Delete, Get, Post, Request, UseGuards } from "@nestjs/common";
 import { CutiService } from "./cuti.service";
 import { UserGuard } from "src/user/user.guard";
+import { CreateCutiRequest } from "src/model/cuti.model";
 
 @Controller('api/cuti')
 export class CutiController {
@@ -49,6 +50,27 @@ export class CutiController {
         await this.cutiService.createDefaultSupervisors();
         return {
             message: 'Supervisors seeded successfully',
+        };
+    }
+
+    @UseGuards(UserGuard)
+    @Post('create')
+    async createCuti(@Body() request: CreateCutiRequest, @Request() req) {
+        const user = req.user;
+        await this.cutiService.createCuti(request, user.userId);
+        return {
+            message: 'Cuti request created successfully',
+        };
+    }
+
+    @UseGuards(UserGuard)
+    @Get('list')
+    async getListCuti(@Request() req) {
+        const user = req.user;
+        const cutiList = await this.cutiService.getCutiByUserId(user.userId);
+        return {
+            data: cutiList,
+            message: 'Cuti list retrieved successfully',
         };
     }
 }

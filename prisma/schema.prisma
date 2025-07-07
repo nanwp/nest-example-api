@@ -67,13 +67,14 @@ model Cuti {
   @@map("cuti")
 }
 
-// model Supervisor {
-//   id        String   @id @default(cuid())
-//   name      String   @db.VarChar(100)
-//   email     String   @unique @db.VarChar(100)
-//   position  String   @db.VarChar(50)
-//   createdAt DateTime @default(now())
-//   updatedAt DateTime @updatedAt
+model CutiProgress {
+  id          String   @id @default(cuid())
+  cutiId      String
+  userId      String
+  status      String   @default("pending") // Default status is 'pending'
+  description String?  @db.Text
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
-//   @@map("supervisors")
-// }
+  @@map("cuti_progress")
+}

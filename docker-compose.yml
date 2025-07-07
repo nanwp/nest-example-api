@@ -24,6 +24,8 @@ services:
       POSTGRES_USER: cuti_user
       POSTGRES_PASSWORD: cuti_password
       POSTGRES_DB: cuti_db
+    ports:
+      - "5432:5432"
     volumes:
       - postgres-data:/var/lib/postgresql/data
     networks:

@@ -2,9 +2,10 @@ import { Inject, Injectable } from "@nestjs/common";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { PrismaService } from "src/cummon/prisma.service";
 import { ValidationService } from "src/cummon/validation.service";
-import { JenisCuti } from "src/model/cuti.model";
+import { CreateCutiRequest, GetListCutiResponse, JenisCuti } from "src/model/cuti.model";
 import { User } from "src/model/user.model";
 import { Logger } from "winston";
+import { CutiValidation } from "./cuti.validate";
 
 @Injectable()
 export class CutiService {
@@ -13,6 +14,135 @@ export class CutiService {
         @Inject(WINSTON_MODULE_PROVIDER) private logger: Logger,
         private prismaService: PrismaService,
     ) { }
+
+    async getCutiByUserId(userId: string): Promise<GetListCutiResponse[]> {
+        this.logger.info('Fetching cuti requests for user', { userId });
+
+        const cutiRequests = await this.prismaService.cuti.findMany({
+            where: {
+                userId: userId,
+            },
+            orderBy: {
+                createdAt: 'desc',
+            },
+        });
+
+        if (!cutiRequests || cutiRequests.length === 0) {
+            this.logger.warn('No cuti requests found for user', { userId });
+            return [];
+        }
+
+        const listJenisCutiId = cutiRequests.map(cuti => cuti.jenisCutiId);
+        const listSubJenisCutiId = cutiRequests.map(cuti => cuti.subJenisCutiId);
+        const listSupervisorId = cutiRequests.map(cuti => cuti.SupervisorId);
+
+        // Filter out null values to ensure type is string[]
+        const filteredSubJenisCutiId = listSubJenisCutiId.filter((id): id is string => id !== null);
+        const filteredSupervisorId = listSupervisorId.filter((id): id is string => id !== null);
+
+        const jenisCutiMap = new Map<string, string>();
+        const subJenisCutiMap = new Map<string, string>();
+        const supervisorMap = new Map<string, string>();
+
+        // Fetch jenis cuti
+        const jenisCuti = await this.prismaService.jenisCuti.findMany({
+            where: {
+                id: {
+                    in: listJenisCutiId,
+                },
+            },
+        });
+
+        jenisCuti.forEach(jenis => {
+            jenisCutiMap.set(jenis.id, jenis.name);
+        });
+
+        // Fetch sub jenis cuti
+        const subJenisCuti = await this.prismaService.subJenisCuti.findMany({
+            where: {
+                id: {
+                    in: filteredSubJenisCutiId,
+                },
+            },
+        });
+
+        subJenisCuti.forEach(sub => {
+            subJenisCutiMap.set(sub.id, sub.name);
+        });
+
+        // Fetch supervisors
+        const supervisors = await this.prismaService.user.findMany({
+            where: {
+                id: {
+                    in: filteredSupervisorId,
+                },
+            },
+        });
+
+        supervisors.forEach(supervisor => {
+            supervisorMap.set(supervisor.id, supervisor.name);
+        });
+
+        const response: GetListCutiResponse[] = cutiRequests.map(cuti => {
+            const res: GetListCutiResponse = {
+                id: cuti.id,
+                jenisCuti: jenisCutiMap.get(cuti.jenisCutiId) || 'Unknown Jenis Cuti',
+                subJenisCuti: cuti.subJenisCutiId ? subJenisCutiMap.get(cuti.subJenisCutiId) || 'Unknown Sub Jenis Cuti' : undefined,
+                tanggalMulai: cuti.startDate,
+                tanggalSelesai: cuti.endDate,
+                keterangan: cuti.description ? cuti.description : 'No description provided',
+                fileUrl: cuti.fileUrl ? cuti.fileUrl : 'No file uploaded',
+                status: cuti.status,
+                userId: cuti.userId,
+                supervisor: cuti.SupervisorId ? supervisorMap.get(cuti.SupervisorId) || 'Unknown Supervisor' : 'No Supervisor Assigned',
+                createdAt: cuti.createdAt,
+                updatedAt: cuti.updatedAt,
+            };
+
+            return res;
+        });
+
+        this.logger.info('Cuti requests fetched successfully', { count: response.length });
+        return response;
+    }
+
+    async createCuti(request: CreateCutiRequest, userId: string): Promise<void> {
+        this.logger.info('Creating cuti request', { request });
+
+        // Validate the request
+        const validatedRequest: CreateCutiRequest = this.validationService.validate(CutiValidation.CREATE_CUTI, request);
+
+        // Convert string dates to Date objects
+        const startDate = new Date(validatedRequest.tanggalMulai);
+        const endDate = new Date(validatedRequest.tanggalSelesai);
+
+        // Validate that dates are valid
+        if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
+            throw new Error('Invalid date format provided');
+        }
+
+        // Validate that start date is before end date
+        if (startDate > endDate) {
+            throw new Error('Start date must be before end date');
+        }
+
+        // Create the cuti in the database
+        await this.prismaService.cuti.create({
+            data: {
+                userId: userId,
+                jenisCutiId: validatedRequest.idJenisCuti,
+                subJenisCutiId: validatedRequest.idSubJenisCuti,
+                startDate: startDate,
+                endDate: endDate,
+                description: validatedRequest.keterangan,
+                fileUrl: validatedRequest.fileUrl,
+                SupervisorId: validatedRequest.supervisorId,
+            },
+        });
+
+        this.logger.info('Cuti request created successfully');
+    }
+
     async getJenisCuti(): Promise<JenisCuti[]> {
         this.logger.info('Fetching jenis cuti');
 
