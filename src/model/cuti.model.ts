@@ -12,12 +12,3 @@ export class JenisCuti {
   updatedAt: Date;
   subJenisCuti?: SubJenisCuti[];
 }
-
-export class Supervisor {
-  id: string;
-  name: string;
-  email: string;
-  position: string;
-  createdAt: Date;
-  updatedAt: Date;
-}

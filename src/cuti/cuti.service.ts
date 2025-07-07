@@ -2,7 +2,8 @@ import { Inject, Injectable } from "@nestjs/common";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { PrismaService } from "src/cummon/prisma.service";
 import { ValidationService } from "src/cummon/validation.service";
-import { JenisCuti, Supervisor } from "src/model/cuti.model";
+import { JenisCuti } from "src/model/cuti.model";
+import { User } from "src/model/user.model";
 import { Logger } from "winston";
 
 @Injectable()
@@ -50,10 +51,13 @@ export class CutiService {
         }));
     }
 
-    async getSupervisors(): Promise<Supervisor[]> {
+    async getSupervisors(): Promise<User[]> {
         this.logger.info('Fetching supervisors');
 
-        const supervisors = await this.prismaService.supervisor.findMany({
+        const supervisors = await this.prismaService.user.findMany({
+            where: {
+                role: 'supervisor',
+            },
             orderBy: {
                 createdAt: 'desc',
             },
@@ -71,12 +75,18 @@ export class CutiService {
             position: supervisor.position,
             createdAt: supervisor.createdAt,
             updatedAt: supervisor.updatedAt,
+            role: supervisor.role,
+            username: supervisor.username,
         }));
     }
 
     async createDefaultSupervisors() {
         // Check if supervisors already exist
-        const existingSupervisors = await this.prismaService.supervisor.findMany();
+        const existingSupervisors = await this.prismaService.user.findMany({
+            where: {
+                role: 'supervisor',
+            },
+        });
         if (existingSupervisors.length > 0) {
             this.logger.warn('Supervisors data already exists, skipping creation');
             return {
@@ -86,11 +96,32 @@ export class CutiService {
 
         // create default supervisors
         this.logger.info('Creating default supervisors data');
-        await this.prismaService.supervisor.createMany({
+        await this.prismaService.user.createMany({
             data: [
-                { name: 'Supervisor A', email: 'supervisorA@example.com', position: 'Manager' },
-                { name: 'Supervisor B', email: 'supervisorB@example.com', position: 'Team Lead' },
-                { name: 'Supervisor C', email: 'supervisorC@example.com', position: 'Senior Developer' },
+                {
+                    name: 'Supervisor 1',
+                    username: 'supervisor1',
+                    email: 'supervisor1@example.com',
+                    position: 'Manager',
+                    role: 'supervisor',
+                    password: 'supervisor1password', // Use a secure password in production
+                },
+                {
+                    name: 'Supervisor 2',
+                    username: 'supervisor2',
+                    email: 'supervisor2@example.com',
+                    position: 'Team Lead',
+                    role: 'supervisor',
+                    password: 'supervisor2password', // Use a secure password in production
+                },
+                {
+                    name: 'Supervisor 3',
+                    username: 'supervisor3',
+                    email: 'supervisor3@example.com',
+                    position: 'Senior Developer',
+                    role: 'supervisor',
+                    password: 'supervisor3password', // Use a secure password in production
+                },
             ],
         });
 
